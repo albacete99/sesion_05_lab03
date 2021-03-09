@@ -1,0 +1,61 @@
+---
+# ansible-galaxy collection install community.general
+- name: "Laboratorio 5 Lab03 - Cambio horario y delegación nodo1 Europa/Moscow"
+  hosts: nodo1
+  tasks:
+    - name: "Obtener marca de tiempo inicial y guardarla"
+      debug:
+        var: ansible_date_time.time
+      register: hora_actual_previa
+    - name: "Cambiar zona horaria"
+      community.general.timezone:
+        name: Europe/Madrid
+      register: salida_cambiozona
+    - name: "Obtener marca de tiempo después de cambio y guardarla"
+      debug:
+        var: ansible_date_time.time
+      register: hora_actual_posterior
+    - name: "Crear fichero"
+      blockinfile:
+        path: "/tmp/datos_horarios_{{ ansible_facts['hostname'] }}.txt"
+        create: yes
+        block: |
+         - La zona horaria antes del cambio es {{ salida_cambiozona.diff.before.name }} Y la hora era {{ hora_actual_previa }}
+         - La zona horaria despues del cambio es {{ salida_cambiozona.diff.after.name}} Y Y la hora era {{ hora_actual_posterior }}
+    - name: "Restablecer zona horaria"
+      timezone:
+        name: "{{ salida_cambiozona.diff.before.name }}"
+      register: salida_cambiozona2
+- name: "Laboratorio 5 Lab03 - Cambio horario y delegación nodo2 Asia/Tokyo"
+  hosts: nodo2
+  tasks:
+    - name: "Obtener marca de tiempo inicial y guardarla"
+      debug:
+        var: ansible_date_time.time
+      register: hora_actual_previa
+    - name: "Cambiar zona horaria"
+      community.general.timezone:
+        name: Asia/Tokyo
+      register: salida_cambiozona
+    - name: "Obtener marca de tiempo después de cambio y guardarla"
+      debug:
+        var: ansible_date_time.time
+      register: hora_actual_posterior
+    - name: "Crear fichero"
+      blockinfile:
+        path: "/tmp/datos_horarios_{{ ansible_facts['hostname'] }}.txt"
+        create: yes
+        block: |
+         - La zona horaria antes del cambio es {{ salida_cambiozona.diff.before.name }} Y la hora era {{ hora_actual_previa }}
+         - La zona horaria despues del cambio es {{ salida_cambiozona.diff.after.name}} Y Y la hora era {{ hora_actual_posterior }}
+    - name: "Restablecer zona horaria"
+      timezone:
+        name: "{{ salida_cambiozona.diff.before.name }}"
+      register: salida_cambiozona2
+    - name: "Copiamos ficheros"
+      copy:
+        src: "/tmp/datos_horarios_{{ ansible_facts['hostname'] }}.txt"
+        dest: "/tmp/"
+      delegate_to: localhost
+      
+...
